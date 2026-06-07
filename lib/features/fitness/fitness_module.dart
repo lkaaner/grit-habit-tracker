@@ -30,6 +30,7 @@ class FitnessModule implements AppModule {
     await Hive.openBox<WeightLog>('fitness_weights');
     await Hive.openBox<String>('fitness_templates');
     await Hive.openBox<String>('fitness_offdays');
+    await Hive.openBox<String>('fitness_cardio');
     await Hive.openBox('fitness_settings');
   }
 
@@ -52,6 +53,9 @@ class FitnessModule implements AppModule {
     }
     if (Hive.isBoxOpen('fitness_offdays')) {
       await Hive.box<String>('fitness_offdays').close();
+    }
+    if (Hive.isBoxOpen('fitness_cardio')) {
+      await Hive.box<String>('fitness_cardio').close();
     }
     if (Hive.isBoxOpen('fitness_settings')) {
       await Hive.box('fitness_settings').close();

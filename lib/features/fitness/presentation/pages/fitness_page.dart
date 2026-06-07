@@ -27,10 +27,16 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
   final TextEditingController _waterInputController = TextEditingController();
 
   final TextEditingController _heightController = TextEditingController();
+  final CupertinoThemeData _cupertinoTheme = const CupertinoThemeData(brightness: Brightness.dark);
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _targetWeightController = TextEditingController();
   final TextEditingController _weightLogController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
+
+  final TextEditingController _stepsController = TextEditingController();
+  final TextEditingController _cardioSpeedController = TextEditingController();
+  final TextEditingController _cardioInclineController = TextEditingController();
+  final TextEditingController _cardioDurationController = TextEditingController();
 
   String _selectedGender = 'erkek';
 
@@ -39,6 +45,7 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
   bool _isMacroInfoExpanded = false; // Makro bilgisi açılır menü kontrolü
   bool _isCalorieExpanded = true; // Kalori takibi açılır menü kontrolü
   bool _isWorkoutsExpanded = true; // Antrenmanlarım açılır menü kontrolü
+  bool _isCardioExpanded = true; // Kardiyo açılır menü kontrolü
   bool _isWeightExpanded = true; // Ağırlık takibi açılır menü kontrolü
   final Set<String> _expandedExercises = {}; // Genişletilmiş egzersizler kümesi
 
@@ -81,6 +88,10 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
     _targetWeightController.dispose();
     _weightLogController.dispose();
     _ageController.dispose();
+    _stepsController.dispose();
+    _cardioSpeedController.dispose();
+    _cardioInclineController.dispose();
+    _cardioDurationController.dispose();
     super.dispose();
   }
 
@@ -338,6 +349,196 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
           child: const Text('İptal'),
         ),
       ),
+    );
+  }
+
+  void _showAddCardioModal() {
+    _stepsController.clear();
+    _cardioSpeedController.clear();
+    _cardioInclineController.clear();
+    _cardioDurationController.clear();
+    
+    int activeTab = 0; // 0: Adım, 1: Koşu Bandı
+    
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return CupertinoTheme(
+              data: _cupertinoTheme,
+              child: CupertinoActionSheet(
+                title: const Text('Yeni Kardiyo / Koşu Ekle'),
+                message: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Segmented Control
+                      CupertinoSegmentedControl<int>(
+                        groupValue: activeTab,
+                        children: const {
+                          0: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Text('Adım Takibi', style: TextStyle(fontSize: 13, color: CupertinoColors.white)),
+                          ),
+                          1: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Text('Koşu Bandı', style: TextStyle(fontSize: 13, color: CupertinoColors.white)),
+                          ),
+                        },
+                        onValueChanged: (int val) {
+                          setModalState(() {
+                            activeTab = val;
+                          });
+                        },
+                        selectedColor: CupertinoColors.activeBlue,
+                        borderColor: CupertinoColors.activeBlue,
+                      ),
+                      const SizedBox(height: 16),
+                      if (activeTab == 0) ...[
+                        CupertinoTextField(
+                          controller: _stepsController,
+                          placeholder: 'Adım sayısı (örn: 10000)...',
+                          keyboardType: TextInputType.number,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16171D),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onChanged: (val) {
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Builder(builder: (context) {
+                          final steps = int.tryParse(_stepsController.text) ?? 0;
+                          final estCalories = (steps * 0.04).round();
+                          return Text(
+                            'Ortalama Yakılan Kalori: $estCalories kcal',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: CupertinoColors.activeGreen,
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        CupertinoTextField(
+                          controller: _cardioSpeedController,
+                          placeholder: 'Hız (km/h) (örn: 8.5)...',
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16171D),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onChanged: (val) {
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        CupertinoTextField(
+                          controller: _cardioInclineController,
+                          placeholder: 'Eğim (%) (örn: 2)...',
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16171D),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onChanged: (val) {
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        CupertinoTextField(
+                          controller: _cardioDurationController,
+                          placeholder: 'Süre (dakika) (örn: 30)...',
+                          keyboardType: TextInputType.number,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16171D),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onChanged: (val) {
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Builder(builder: (context) {
+                          final speed = double.tryParse(_cardioSpeedController.text.replaceAll(',', '.')) ?? 0.0;
+                          final incline = double.tryParse(_cardioInclineController.text.replaceAll(',', '.')) ?? 0.0;
+                          final duration = int.tryParse(_cardioDurationController.text) ?? 0;
+                          final estCalories = ref.read(fitnessProvider.notifier).calculateCardioCalories(
+                            speed: speed,
+                            incline: incline,
+                            duration: duration,
+                          );
+                          return Text(
+                            'Ortalama Yakılan Kalori: $estCalories kcal',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: CupertinoColors.activeGreen,
+                            ),
+                          );
+                        }),
+                      ],
+                    ],
+                  ),
+                ),
+                actions: <CupertinoActionSheetAction>[
+                  CupertinoActionSheetAction(
+                    isDefaultAction: true,
+                    onPressed: () {
+                      final notifier = ref.read(fitnessProvider.notifier);
+                      if (activeTab == 0) {
+                        final steps = int.tryParse(_stepsController.text) ?? 0;
+                        if (steps > 0) {
+                          final calories = (steps * 0.04).round();
+                          notifier.addCardioLog(
+                            steps: steps,
+                            speed: 0.0,
+                            incline: 0.0,
+                            duration: 0,
+                            calculatedCalories: calories,
+                            isCompleted: true,
+                          );
+                        }
+                      } else {
+                        final speed = double.tryParse(_cardioSpeedController.text.replaceAll(',', '.')) ?? 0.0;
+                        final incline = double.tryParse(_cardioInclineController.text.replaceAll(',', '.')) ?? 0.0;
+                        final duration = int.tryParse(_cardioDurationController.text) ?? 0;
+                        if (duration > 0) {
+                          final calories = notifier.calculateCardioCalories(
+                            speed: speed,
+                            incline: incline,
+                            duration: duration,
+                          );
+                          notifier.addCardioLog(
+                            steps: 0,
+                            speed: speed,
+                            incline: incline,
+                            duration: duration,
+                            calculatedCalories: calories,
+                            isCompleted: true,
+                          );
+                        }
+                      }
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Ekle'),
+                  ),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  isDestructiveAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('İptal'),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1870,8 +2071,10 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                                 }).toList(),
                               ),
                     ],
-                    const SizedBox(height: 24),
                   ],
+                  const SizedBox(height: 24),
+                  _buildCardioSection(state, notifier),
+                  const SizedBox(height: 24),
 
                     // ==========================================
                     // 6. AĞIRLIK TAKİBİ VE ÖZEL GRAFİK
@@ -2046,6 +2249,170 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildCardioSection(FitnessState state, FitnessNotifier notifier) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isCardioExpanded = !_isCardioExpanded;
+            });
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16171D),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(CupertinoIcons.sportscourt, color: CupertinoColors.activeGreen, size: 22),
+                    SizedBox(width: 8),
+                    Text(
+                      'Kardiyo & Koşu Takibi',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: CupertinoColors.white),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      minSize: 0,
+                      onPressed: _showAddCardioModal,
+                      child: const Icon(CupertinoIcons.add_circled_solid, color: CupertinoColors.activeGreen, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      _isCardioExpanded ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                      color: CupertinoColors.activeGreen,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_isCardioExpanded) ...[
+          state.cardioLogs.isEmpty
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16171D),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    'Bugün henüz kardiyo veya koşu kaydı eklenmedi.',
+                    style: TextStyle(color: Color(0xFF9EA0A5), fontSize: 13),
+                  ),
+                )
+              : Column(
+                  children: state.cardioLogs.map((log) {
+                    final isStep = log.steps > 0;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF16171D),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: CupertinoColors.activeGreen.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isStep ? CupertinoIcons.wind : CupertinoIcons.sportscourt_fill,
+                              color: CupertinoColors.activeGreen,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isStep ? 'Adım Takibi' : 'Koşu Bandı',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: CupertinoColors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isStep
+                                      ? '${log.steps} Adım • ~${log.calculatedCalories} kcal'
+                                      : 'Hız: ${log.speed} km/h • Eğim: %${log.incline} • ${log.duration} dk • ~${log.calculatedCalories} kcal',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF9EA0A5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Completed Checkbox
+                          GestureDetector(
+                            onTap: () => notifier.toggleCardioCompleted(log.id),
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: log.isCompleted
+                                    ? CupertinoColors.activeGreen
+                                    : CupertinoColors.transparent,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: CupertinoColors.activeGreen,
+                                  width: 2.0,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: log.isCompleted
+                                  ? const Icon(
+                                      CupertinoIcons.checkmark,
+                                      color: CupertinoColors.black,
+                                      size: 14,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            minSize: 0,
+                            onPressed: () => notifier.deleteCardioLog(log.id),
+                            child: const Icon(
+                              CupertinoIcons.trash,
+                              color: CupertinoColors.destructiveRed,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+        ],
+      ],
     );
   }
 

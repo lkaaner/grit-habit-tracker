@@ -31,12 +31,79 @@ class WorkoutTemplate {
       );
 }
 
+class CardioLog {
+  final String id;
+  final DateTime date;
+  final int steps; // Adım
+  final double speed; // Hız (km/h)
+  final double incline; // Eğim (%)
+  final int duration; // Süre (dakika)
+  final int calculatedCalories; // Hesaplanan ortalama kalori
+  final bool isCompleted; // Yapıldı / Yapılmadı
+
+  CardioLog({
+    required this.id,
+    required this.date,
+    required this.steps,
+    required this.speed,
+    required this.incline,
+    required this.duration,
+    required this.calculatedCalories,
+    required this.isCompleted,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String(),
+        'steps': steps,
+        'speed': speed,
+        'incline': incline,
+        'duration': duration,
+        'calculatedCalories': calculatedCalories,
+        'isCompleted': isCompleted,
+      };
+
+  factory CardioLog.fromJson(Map<String, dynamic> json) => CardioLog(
+        id: json['id'] as String,
+        date: DateTime.parse(json['date'] as String),
+        steps: json['steps'] as int? ?? 0,
+        speed: (json['speed'] as num?)?.toDouble() ?? 0.0,
+        incline: (json['incline'] as num?)?.toDouble() ?? 0.0,
+        duration: json['duration'] as int? ?? 0,
+        calculatedCalories: json['calculatedCalories'] as int? ?? 0,
+        isCompleted: json['isCompleted'] as bool? ?? false,
+      );
+
+  CardioLog copyWith({
+    String? id,
+    DateTime? date,
+    int? steps,
+    double? speed,
+    double? incline,
+    int? duration,
+    int? calculatedCalories,
+    bool? isCompleted,
+  }) {
+    return CardioLog(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      steps: steps ?? this.steps,
+      speed: speed ?? this.speed,
+      incline: incline ?? this.incline,
+      duration: duration ?? this.duration,
+      calculatedCalories: calculatedCalories ?? this.calculatedCalories,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+}
+
 class FitnessState {
   final DateTime selectedDate;
   final int targetCalories;
   final List<CalorieLog> calorieLogs; // Seçilen tarihteki
   final List<WaterLog> waterLogs; // Seçilen tarihteki
   final List<WorkoutLog> workoutLogs; // Seçilen tarihteki
+  final List<CardioLog> cardioLogs; // Seçilen tarihteki kardiyo kayıtları
   final List<WeightLog> weightLogs; // Grafik için tüm geçmiş
   final List<WorkoutTemplate> templates; // Tüm kayıtlı şablonlar
   final bool isTodayOffDay; // Seçili gün offday mi?
@@ -52,6 +119,7 @@ class FitnessState {
     required this.calorieLogs,
     required this.waterLogs,
     required this.workoutLogs,
+    required this.cardioLogs,
     required this.weightLogs,
     required this.templates,
     required this.isTodayOffDay,
@@ -122,6 +190,7 @@ class FitnessState {
     List<CalorieLog>? calorieLogs,
     List<WaterLog>? waterLogs,
     List<WorkoutLog>? workoutLogs,
+    List<CardioLog>? cardioLogs,
     List<WeightLog>? weightLogs,
     List<WorkoutTemplate>? templates,
     bool? isTodayOffDay,
@@ -137,6 +206,7 @@ class FitnessState {
       calorieLogs: calorieLogs ?? this.calorieLogs,
       waterLogs: waterLogs ?? this.waterLogs,
       workoutLogs: workoutLogs ?? this.workoutLogs,
+      cardioLogs: cardioLogs ?? this.cardioLogs,
       weightLogs: weightLogs ?? this.weightLogs,
       templates: templates ?? this.templates,
       isTodayOffDay: isTodayOffDay ?? this.isTodayOffDay,
@@ -157,6 +227,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
           calorieLogs: [],
           waterLogs: [],
           workoutLogs: [],
+          cardioLogs: [],
           weightLogs: [],
           templates: [],
           isTodayOffDay: false,
@@ -168,6 +239,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
   late final Box<WeightLog> _weightBox;
   late final Box<String> _templateBox;
   late final Box<String> _offdayBox;
+  late final Box<String> _cardioBox;
   late final Box _settingsBox;
 
   void init() {
@@ -177,6 +249,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
     _weightBox = Hive.box<WeightLog>('fitness_weights');
     _templateBox = Hive.box<String>('fitness_templates');
     _offdayBox = Hive.box<String>('fitness_offdays');
+    _cardioBox = Hive.box<String>('fitness_cardio');
     _settingsBox = Hive.box('fitness_settings');
     loadInitialData();
   }
@@ -199,6 +272,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
       calorieLogs: [],
       waterLogs: [],
       workoutLogs: [],
+      cardioLogs: [],
       weightLogs: [],
       templates: [],
       isTodayOffDay: false,
@@ -239,6 +313,14 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
           log.date.day == date.day;
     }).toList();
 
+    final cardioLogs = _cardioBox.values.map((jsonStr) {
+      return CardioLog.fromJson(jsonDecode(jsonStr));
+    }).where((log) {
+      return log.date.year == date.year &&
+          log.date.month == date.month &&
+          log.date.day == date.day;
+    }).toList();
+
     final weightLogs = _weightBox.values.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
 
@@ -262,6 +344,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
       calorieLogs: calorieLogs,
       waterLogs: waterLogs,
       workoutLogs: workoutLogs,
+      cardioLogs: cardioLogs,
       weightLogs: weightLogs,
       templates: templates,
       isTodayOffDay: isTodayOffDay,
@@ -508,6 +591,124 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
   void updateTargetCalories(int target) {
     _settingsBox.put('targetCalories', target);
     state = state.copyWith(targetCalories: target);
+  }
+
+  // ==========================================
+  // KARDİYO & KOŞU İŞLEMLERİ
+  // ==========================================
+  int calculateCardioCalories({
+    required double speed,
+    required double incline,
+    required int duration,
+  }) {
+    if (duration <= 0 || state.userWeight <= 0) return 0;
+    
+    // Hız m/dak cinsine çevrilir: 1 km/h = 1000m / 60dak = 16.67 m/dak
+    final speedMins = speed * 16.67;
+    final grade = incline / 100.0;
+    
+    double vo2 = 0.0;
+    if (speed <= 6.0) {
+      // Yürüyüş formülü
+      vo2 = (0.1 * speedMins) + (1.8 * speedMins * grade) + 3.5;
+    } else {
+      // Koşu formülü
+      vo2 = (0.2 * speedMins) + (0.9 * speedMins * grade) + 3.5;
+    }
+    
+    // Dakika başına kalori = VO2 * ağırlık * 0.005
+    final calPerMin = vo2 * state.userWeight * 0.005;
+    return (calPerMin * duration).round();
+  }
+
+  Future<void> addCardioLog({
+    required int steps,
+    required double speed,
+    required double incline,
+    required int duration,
+    required int calculatedCalories,
+    bool isCompleted = false,
+  }) async {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final log = CardioLog(
+      id: id,
+      date: state.selectedDate,
+      steps: steps,
+      speed: speed,
+      incline: incline,
+      duration: duration,
+      calculatedCalories: calculatedCalories,
+      isCompleted: isCompleted,
+    );
+    await _cardioBox.put(id, jsonEncode(log.toJson()));
+    
+    // Eğer doğrudan yapıldı işaretli eklendiyse ve kalori varsa yakılan kaloriye otomatik ekle
+    if (isCompleted && calculatedCalories > 0) {
+      final desc = steps > 0 ? "Kardiyo: $steps Adım" : "Kardiyo: $duration dk Koşu (%$incline Eğim, $speed km/h)";
+      await addCalorieLog(calculatedCalories, 'burned', desc);
+    }
+    
+    loadDataForDate(state.selectedDate);
+  }
+
+  Future<void> toggleCardioCompleted(String id) async {
+    final jsonStr = _cardioBox.get(id);
+    if (jsonStr != null) {
+      final existing = CardioLog.fromJson(jsonDecode(jsonStr));
+      final wasCompleted = existing.isCompleted;
+      final updated = existing.copyWith(isCompleted: !wasCompleted);
+      
+      await _cardioBox.put(id, jsonEncode(updated.toJson()));
+      
+      final desc = existing.steps > 0 
+          ? "Kardiyo: ${existing.steps} Adım" 
+          : "Kardiyo: ${existing.duration} dk Koşu (%${existing.incline} Eğim, ${existing.speed} km/h)";
+
+      if (updated.isCompleted && updated.calculatedCalories > 0) {
+        // Otomatik ekle
+        await addCalorieLog(updated.calculatedCalories, 'burned', desc);
+      } else if (!updated.isCompleted && wasCompleted && updated.calculatedCalories > 0) {
+        // Sil
+        final calorieIndex = _calorieBox.values.toList().indexWhere((log) => 
+          log.date.year == state.selectedDate.year &&
+          log.date.month == state.selectedDate.month &&
+          log.date.day == state.selectedDate.day &&
+          log.type == 'burned' &&
+          log.amount == updated.calculatedCalories &&
+          log.description == desc
+        );
+        if (calorieIndex != -1) {
+          await _calorieBox.deleteAt(calorieIndex);
+        }
+      }
+      
+      loadDataForDate(state.selectedDate);
+    }
+  }
+
+  Future<void> deleteCardioLog(String id) async {
+    final jsonStr = _cardioBox.get(id);
+    if (jsonStr != null) {
+      final log = CardioLog.fromJson(jsonDecode(jsonStr));
+      if (log.isCompleted && log.calculatedCalories > 0) {
+        final desc = log.steps > 0 
+            ? "Kardiyo: ${log.steps} Adım" 
+            : "Kardiyo: ${log.duration} dk Koşu (%${log.incline} Eğim, ${log.speed} km/h)";
+        final calorieIndex = _calorieBox.values.toList().indexWhere((cLog) => 
+          cLog.date.year == state.selectedDate.year &&
+          cLog.date.month == state.selectedDate.month &&
+          cLog.date.day == state.selectedDate.day &&
+          cLog.type == 'burned' &&
+          cLog.amount == log.calculatedCalories &&
+          cLog.description == desc
+        );
+        if (calorieIndex != -1) {
+          await _calorieBox.deleteAt(calorieIndex);
+        }
+      }
+      await _cardioBox.delete(id);
+      loadDataForDate(state.selectedDate);
+    }
   }
 
   String _formatDateKey(DateTime date) {
