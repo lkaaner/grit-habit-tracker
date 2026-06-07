@@ -17,6 +17,7 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
   final TextEditingController _titleController = TextEditingController();
   DateTime? _lastSelectedDate;
 
+  bool _isHabitsExpanded = true;
   bool _isMorningExpanded = true;
   bool _isAfternoonExpanded = true;
   bool _isEveningExpanded = true;
@@ -741,64 +742,84 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
                     const SizedBox(height: 24),
 
                     // ==========================================
-                    // HABIT TRACKER BÖLÜMÜ
+                    // HABIT TRACKER BÖLÜMÜ (AÇILIR-KAPANIR YAPI)
                     // ==========================================
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Icon(CupertinoIcons.sparkles, color: Color(0xFF8B5CF6), size: 22),
-                          SizedBox(width: 8),
-                          Text(
-                            'Habit Tracker',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: CupertinoColors.white,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isHabitsExpanded = !_isHabitsExpanded;
+                        });
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(CupertinoIcons.sparkles, color: Color(0xFF8B5CF6), size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Habit Tracker',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: CupertinoColors.white,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                            Icon(
+                              _isHabitsExpanded ? CupertinoIcons.chevron_up_circle_fill : CupertinoIcons.chevron_down_circle_fill,
+                              color: const Color(0xFF8B5CF6),
+                              size: 22,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
 
-                    // SABAH GRUBU
-                    _buildHabitGroup(
-                      title: 'Sabah',
-                      icon: CupertinoIcons.sunrise_fill,
-                      color: const Color(0xFFFF9500),
-                      isExpanded: _isMorningExpanded,
-                      onToggle: () => setState(() => _isMorningExpanded = !_isMorningExpanded),
-                      habits: state.habits.where((h) => h.title.startsWith('[Sabah] ') || (!h.title.startsWith('[Öğlen] ') && !h.title.startsWith('[Akşam] '))).toList(),
-                      state: state,
-                      notifier: notifier,
-                    ),
-                    const SizedBox(height: 16),
+                    if (_isHabitsExpanded) ...[
+                      // SABAH GRUBU
+                      _buildHabitGroup(
+                        title: 'Sabah',
+                        icon: CupertinoIcons.sunrise_fill,
+                        color: const Color(0xFFFF9500),
+                        isExpanded: _isMorningExpanded,
+                        onToggle: () => setState(() => _isMorningExpanded = !_isMorningExpanded),
+                        habits: state.habits.where((h) => h.title.startsWith('[Sabah] ') || (!h.title.startsWith('[Öğlen] ') && !h.title.startsWith('[Akşam] '))).toList(),
+                        state: state,
+                        notifier: notifier,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // ÖĞLEN GRUBU
-                    _buildHabitGroup(
-                      title: 'Öğlen',
-                      icon: CupertinoIcons.sun_max_fill,
-                      color: const Color(0xFFFFCC00),
-                      isExpanded: _isAfternoonExpanded,
-                      onToggle: () => setState(() => _isAfternoonExpanded = !_isAfternoonExpanded),
-                      habits: state.habits.where((h) => h.title.startsWith('[Öğlen] ')).toList(),
-                      state: state,
-                      notifier: notifier,
-                    ),
-                    const SizedBox(height: 16),
+                      // ÖĞLEN GRUBU
+                      _buildHabitGroup(
+                        title: 'Öğlen',
+                        icon: CupertinoIcons.sun_max_fill,
+                        color: const Color(0xFFFFCC00),
+                        isExpanded: _isAfternoonExpanded,
+                        onToggle: () => setState(() => _isAfternoonExpanded = !_isAfternoonExpanded),
+                        habits: state.habits.where((h) => h.title.startsWith('[Öğlen] ')).toList(),
+                        state: state,
+                        notifier: notifier,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // AKŞAM GRUBU
-                    _buildHabitGroup(
-                      title: 'Akşam',
-                      icon: CupertinoIcons.moon_stars_fill,
-                      color: const Color(0xFF8B5CF6),
-                      isExpanded: _isEveningExpanded,
-                      onToggle: () => setState(() => _isEveningExpanded = !_isEveningExpanded),
-                      habits: state.habits.where((h) => h.title.startsWith('[Akşam] ')).toList(),
-                      state: state,
-                      notifier: notifier,
-                    ),
+                      // AKŞAM GRUBU
+                      _buildHabitGroup(
+                        title: 'Akşam',
+                        icon: CupertinoIcons.moon_stars_fill,
+                        color: const Color(0xFF8B5CF6),
+                        isExpanded: _isEveningExpanded,
+                        onToggle: () => setState(() => _isEveningExpanded = !_isEveningExpanded),
+                        habits: state.habits.where((h) => h.title.startsWith('[Akşam] ')).toList(),
+                        state: state,
+                        notifier: notifier,
+                      ),
+                    ],
                     const SizedBox(height: 24),
 
                     // ==========================================
