@@ -67,6 +67,61 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
     );
   }
 
+  void _showDatePicker() {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: const Color(0xFF16171D),
+          child: Column(
+            children: [
+              Container(
+                color: const Color(0xFF1E1F26),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('İptal', style: TextStyle(color: CupertinoColors.destructiveRed)),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('Seç', style: TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold)),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    brightness: Brightness.dark,
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
+                        color: CupertinoColors.white,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.date,
+                    initialDateTime: ref.read(productivityProvider).selectedDate,
+                    maximumDate: DateTime.now().add(const Duration(days: 365)),
+                    minimumDate: DateTime.now().subtract(const Duration(days: 365)),
+                    onDateTimeChanged: (DateTime newDate) {
+                      ref.read(productivityProvider.notifier).changeSelectedDate(newDate);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   void dispose() {
     _noteController.dispose();
@@ -563,12 +618,36 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
                               ),
                             ],
                           ),
-                          Text(
-                            _formatSelectedDate(state.selectedDate),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: CupertinoColors.white,
+                          GestureDetector(
+                            onTap: _showDatePicker,
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF16171D),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(CupertinoIcons.calendar, color: Color(0xFF8B5CF6), size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatSelectedDate(state.selectedDate),
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: CupertinoColors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(CupertinoIcons.chevron_down, color: Color(0xFF8B5CF6), size: 12),
+                                ],
+                              ),
                             ),
                           ),
                           Row(
@@ -617,8 +696,8 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
                       child: Stack(
                         children: [
                           Positioned(
-                            left: 32,
-                            right: 32,
+                            left: 48,
+                            right: 48,
                             top: 48,
                             child: Container(
                               height: 2,
@@ -626,115 +705,143 @@ class _ProductivityPageState extends ConsumerState<ProductivityPage> {
                             ),
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: List.generate(7, (index) {
-                              final day = weekDays[index];
-                              final isSelected = day.year == state.selectedDate.year &&
-                                  day.month == state.selectedDate.month &&
-                                  day.day == state.selectedDate.day;
-                              final isFullyCompleted = notifier.isDateFullyCompleted(day);
-
-                              if (isSelected) {
-                                return Container(
-                                  width: 44,
-                                  height: 76,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                    borderRadius: BorderRadius.circular(22),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      )
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        weekDayNames[index],
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: CupertinoColors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Container(
-                                        width: 26,
-                                        height: 26,
-                                        decoration: const BoxDecoration(
-                                          color: CupertinoColors.white,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          day.day.toString(),
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF6D28D9),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-
-                              return GestureDetector(
-                                onTap: () => notifier.changeSelectedDate(day),
-                                behavior: HitTestBehavior.opaque,
-                                child: SizedBox(
-                                  width: 44,
-                                  height: 76,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        weekDayNames[index],
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF9EA0A5),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Container(
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
-                                          color: isFullyCompleted
-                                              ? const Color(0xFF8B5CF6)
-                                              : CupertinoColors.transparent,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFF8B5CF6),
-                                            width: 1.8,
-                                          ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          day.day.toString(),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: isFullyCompleted
-                                                ? CupertinoColors.white
-                                                : const Color(0xFF8B5CF6),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                            children: [
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  notifier.changeSelectedDate(state.selectedDate.subtract(const Duration(days: 7)));
+                                },
+                                child: const Icon(
+                                  CupertinoIcons.chevron_left,
+                                  color: Color(0xFF8B5CF6),
+                                  size: 20,
                                 ),
-                              );
-                            }),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: List.generate(7, (index) {
+                                    final day = weekDays[index];
+                                    final isSelected = day.year == state.selectedDate.year &&
+                                        day.month == state.selectedDate.month &&
+                                        day.day == state.selectedDate.day;
+                                    final isFullyCompleted = notifier.isDateFullyCompleted(day);
+
+                                    if (isSelected) {
+                                      return Container(
+                                        width: 34,
+                                        height: 76,
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            )
+                                          ],
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              weekDayNames[index],
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: CupertinoColors.white,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Container(
+                                              width: 22,
+                                              height: 22,
+                                              decoration: const BoxDecoration(
+                                                color: CupertinoColors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                day.day.toString(),
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF6D28D9),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+
+                                    return GestureDetector(
+                                      onTap: () => notifier.changeSelectedDate(day),
+                                      behavior: HitTestBehavior.opaque,
+                                      child: SizedBox(
+                                        width: 34,
+                                        height: 76,
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              weekDayNames[index],
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF9EA0A5),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Container(
+                                              width: 22,
+                                              height: 22,
+                                              decoration: BoxDecoration(
+                                                color: isFullyCompleted
+                                                    ? const Color(0xFF8B5CF6)
+                                                    : CupertinoColors.transparent,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: const Color(0xFF8B5CF6),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                day.day.toString(),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isFullyCompleted
+                                                      ? CupertinoColors.white
+                                                      : const Color(0xFF8B5CF6),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  notifier.changeSelectedDate(state.selectedDate.add(const Duration(days: 7)));
+                                },
+                                child: const Icon(
+                                  CupertinoIcons.chevron_right,
+                                  color: Color(0xFF8B5CF6),
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
