@@ -17,6 +17,9 @@ class HiveService {
   /// Uygulama kapanırken tüm Hive kutularını ve Hive veritabanını güvenle kapatır.
   Future<void> close() async {
     await ModuleRegistry.instance.disposeModules();
+    if (Hive.isBoxOpen('system_settings')) {
+      await Hive.box('system_settings').close();
+    }
     await Hive.close();
   }
 }

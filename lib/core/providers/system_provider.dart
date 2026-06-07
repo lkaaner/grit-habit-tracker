@@ -14,12 +14,18 @@ class SystemState {
   final String backupStatus; // 'idle', 'loading', 'success', 'error'
   final String lastBackupPath;
   final String? backupJsonText;
+  final bool isFinanceEnabled;
+  final bool isFitnessEnabled;
+  final bool isProductivityEnabled;
 
   SystemState({
     required this.lastCheckedDate,
     required this.backupStatus,
     required this.lastBackupPath,
     this.backupJsonText,
+    this.isFinanceEnabled = true,
+    this.isFitnessEnabled = true,
+    this.isProductivityEnabled = true,
   });
 
   SystemState copyWith({
@@ -27,12 +33,18 @@ class SystemState {
     String? backupStatus,
     String? lastBackupPath,
     String? backupJsonText,
+    bool? isFinanceEnabled,
+    bool? isFitnessEnabled,
+    bool? isProductivityEnabled,
   }) {
     return SystemState(
       lastCheckedDate: lastCheckedDate ?? this.lastCheckedDate,
       backupStatus: backupStatus ?? this.backupStatus,
       lastBackupPath: lastBackupPath ?? this.lastBackupPath,
       backupJsonText: backupJsonText ?? this.backupJsonText,
+      isFinanceEnabled: isFinanceEnabled ?? this.isFinanceEnabled,
+      isFitnessEnabled: isFitnessEnabled ?? this.isFitnessEnabled,
+      isProductivityEnabled: isProductivityEnabled ?? this.isProductivityEnabled,
     );
   }
 }
@@ -40,19 +52,53 @@ class SystemState {
 class SystemNotifier extends StateNotifier<SystemState> {
   final Ref ref;
   Timer? _ticker;
+  late final Box _settingsBox;
 
   SystemNotifier(this.ref)
       : super(SystemState(
           lastCheckedDate: DateTime.now(),
           backupStatus: 'idle',
           lastBackupPath: '',
+          isFinanceEnabled: true,
+          isFitnessEnabled: true,
+          isProductivityEnabled: true,
         ));
 
-  void init() {
+  Future<void> init() async {
+    _settingsBox = await Hive.openBox('system_settings');
+    final isFinance = _settingsBox.get('isFinanceEnabled', defaultValue: true) as bool;
+    final isFitness = _settingsBox.get('isFitnessEnabled', defaultValue: true) as bool;
+    final isProductivity = _settingsBox.get('isProductivityEnabled', defaultValue: true) as bool;
+
+    state = state.copyWith(
+      isFinanceEnabled: isFinance,
+      isFitnessEnabled: isFitness,
+      isProductivityEnabled: isProductivity,
+    );
+
     // Her 10 saniyede bir gün değişimini reaktif olarak kontrol et
     _ticker = Timer.periodic(const Duration(seconds: 10), (timer) {
       _checkMidnightReset();
     });
+  }
+
+  void toggleModule(String module) {
+    if (module == 'finance') {
+      if (state.isFinanceEnabled && !state.isFitnessEnabled && !state.isProductivityEnabled) return;
+      final newValue = !state.isFinanceEnabled;
+      _settingsBox.put('isFinanceEnabled', newValue);
+      state = state.copyWith(isFinanceEnabled: newValue);
+    } else if (module == 'fitness') {
+      if (state.isFitnessEnabled && !state.isFinanceEnabled && !state.isProductivityEnabled) return;
+      final newValue = !state.isFitnessEnabled;
+      _settingsBox.put('isFitnessEnabled', newValue);
+      state = state.copyWith(isFitnessEnabled: newValue);
+    } else if (module == 'productivity') {
+      if (state.isProductivityEnabled && !state.isFinanceEnabled && !state.isFitnessEnabled) return;
+      final newValue = !state.isProductivityEnabled;
+      _settingsBox.put('isProductivityEnabled', newValue);
+      state = state.copyWith(isProductivityEnabled: newValue);
+    }
   }
 
   @override

@@ -6,6 +6,8 @@ import 'features/finance/presentation/pages/finance_page.dart';
 import 'features/fitness/presentation/pages/fitness_page.dart';
 import 'features/productivity/presentation/pages/productivity_page.dart';
 
+import 'core/providers/system_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -48,14 +50,14 @@ class PersonalDashboardApp extends StatelessWidget {
   }
 }
 
-class DashboardShell extends StatefulWidget {
+class DashboardShell extends ConsumerStatefulWidget {
   const DashboardShell({super.key});
 
   @override
-  State<DashboardShell> createState() => _DashboardShellState();
+  ConsumerState<DashboardShell> createState() => _DashboardShellState();
 }
 
-class _DashboardShellState extends State<DashboardShell> {
+class _DashboardShellState extends ConsumerState<DashboardShell> {
   @override
   void dispose() {
     // Uygulama kapanırken Hive kutularını güvenle kapat
@@ -65,7 +67,55 @@ class _DashboardShellState extends State<DashboardShell> {
 
   @override
   Widget build(BuildContext context) {
+    final systemState = ref.watch(systemProvider);
+
+    final activeTabs = <Map<String, dynamic>>[];
+    
+    if (systemState.isFinanceEnabled) {
+      activeTabs.add({
+        'item': const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.money_dollar),
+          label: '',
+        ),
+        'builder': (BuildContext context) => const FinancePage(),
+      });
+    }
+    
+    if (systemState.isFitnessEnabled) {
+      activeTabs.add({
+        'item': const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.heart_fill),
+          label: '',
+        ),
+        'builder': (BuildContext context) => const FitnessPage(),
+      });
+    }
+    
+    if (systemState.isProductivityEnabled) {
+      activeTabs.add({
+        'item': const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.checkmark_circle),
+          label: '',
+        ),
+        'builder': (BuildContext context) => const ProductivityPage(),
+      });
+    }
+
+    // Güvenlik önlemi: Eğer hepsi kapalıysa (normalde olamaz) varsayılan olarak finans göster
+    if (activeTabs.isEmpty) {
+      activeTabs.add({
+        'item': const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.money_dollar),
+          label: '',
+        ),
+        'builder': (BuildContext context) => const FinancePage(),
+      });
+    }
+
+    final String tabsKey = '${systemState.isFinanceEnabled}_${systemState.isFitnessEnabled}_${systemState.isProductivityEnabled}';
+
     return CupertinoTabScaffold(
+      key: ValueKey(tabsKey),
       tabBar: CupertinoTabBar(
         backgroundColor: const Color(0xFF16171D),
         activeColor: const Color(0xFF8B5CF6),
@@ -73,34 +123,15 @@ class _DashboardShellState extends State<DashboardShell> {
         border: const Border(
           top: BorderSide(color: Color(0xFF2C2C35), width: 0.5),
         ),
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.money_dollar),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.heart_fill),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.checkmark_circle),
-            label: '',
-          ),
-        ],
+        items: activeTabs.map((t) => t['item'] as BottomNavigationBarItem).toList(),
       ),
       tabBuilder: (BuildContext context, int index) {
         return CupertinoTabView(
           builder: (BuildContext context) {
-            switch (index) {
-              case 0:
-                return const FinancePage();
-              case 1:
-                return const FitnessPage();
-              case 2:
-                return const ProductivityPage();
-              default:
-                return const FinancePage();
+            if (index < activeTabs.length) {
+              return (activeTabs[index]['builder'] as WidgetBuilder)(context);
             }
+            return const FinancePage();
           },
         );
       },

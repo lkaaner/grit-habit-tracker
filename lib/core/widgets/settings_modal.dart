@@ -84,6 +84,57 @@ class _SettingsModalState extends ConsumerState<SettingsModal> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+            // AKTİF MODÜLLER BÖLÜMÜ
+            const Text(
+              'AKTİF MODÜLLER',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.secondaryLabel,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemBackground,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: [
+                  _buildModuleToggleTile(
+                    title: 'Finans Modülü',
+                    subtitle: 'Gelir/gider ve borç takibi.',
+                    icon: CupertinoIcons.money_dollar,
+                    isEnabled: systemState.isFinanceEnabled,
+                    onChanged: (val) {
+                      ref.read(systemProvider.notifier).toggleModule('finance');
+                    },
+                  ),
+                  Container(height: 0.5, margin: const EdgeInsets.only(left: 16, right: 16), color: CupertinoColors.separator),
+                  _buildModuleToggleTile(
+                    title: 'Fitness & Sağlık Modülü',
+                    subtitle: 'Kalori, su, antrenman ve kardiyo takibi.',
+                    icon: CupertinoIcons.heart_fill,
+                    isEnabled: systemState.isFitnessEnabled,
+                    onChanged: (val) {
+                      ref.read(systemProvider.notifier).toggleModule('fitness');
+                    },
+                  ),
+                  Container(height: 0.5, margin: const EdgeInsets.only(left: 16, right: 16), color: CupertinoColors.separator),
+                  _buildModuleToggleTile(
+                    title: 'Verimlilik Modülü',
+                    subtitle: 'Habit tracker, yapılacaklar ve notlar.',
+                    icon: CupertinoIcons.checkmark_circle,
+                    isEnabled: systemState.isProductivityEnabled,
+                    onChanged: (val) {
+                      ref.read(systemProvider.notifier).toggleModule('productivity');
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // YEDEKLEME BÖLÜMÜ
             const Text(
               'YEREL YEDEKLEME',
@@ -269,6 +320,45 @@ class _SettingsModalState extends ConsumerState<SettingsModal> {
             trailing,
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildModuleToggleTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isEnabled,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Row(
+        children: [
+          Icon(icon, color: isEnabled ? const Color(0xFF8B5CF6) : CupertinoColors.secondaryLabel, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel),
+                ),
+              ],
+            ),
+          ),
+          CupertinoSwitch(
+            value: isEnabled,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF8B5CF6),
+          ),
+        ],
       ),
     );
   }
