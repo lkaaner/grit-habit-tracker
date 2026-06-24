@@ -187,6 +187,18 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                     p = (1.9 * val) / 100;
                     f = (0.1 * val) / 100;
                     desc = 'Patates (${val.round()}g)';
+                  } else if (foodName == 'Gong (Paket)') {
+                    kcal = 294 * val;
+                    c = 45.63 * val;
+                    p = 3.71 * val;
+                    f = 10.37 * val;
+                    desc = 'Gong (${val.toStringAsFixed(1).replaceAll('.0', '')} Paket)';
+                  } else if (foodName == 'Gong (Adet)') {
+                    kcal = 50 * val;
+                    c = 7.84 * val;
+                    p = 0.64 * val;
+                    f = 1.78 * val;
+                    desc = 'Gong (${val.toStringAsFixed(1).replaceAll('.0', '')} Adet)';
                   }
 
                   _calorieAmountController.text = kcal.round().toString();
@@ -309,6 +321,14 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                       _buildPresetChip(
                         label: '🥔 Patates',
                         onTap: () => _showFoodInputDialog('Patates', true),
+                      ),
+                      _buildPresetChip(
+                        label: '🍿 Gong (Paket)',
+                        onTap: () => _showFoodInputDialog('Gong (Paket)', false),
+                      ),
+                      _buildPresetChip(
+                        label: '🍿 Gong (Adet)',
+                        onTap: () => _showFoodInputDialog('Gong (Adet)', false),
                       ),
                     ],
                   ),
