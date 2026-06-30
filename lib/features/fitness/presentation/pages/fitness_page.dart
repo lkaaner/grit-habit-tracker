@@ -1886,11 +1886,17 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                         SizedBox(
                           height: 38,
                           child: state.templates.isEmpty
-                              ? const Center(
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text('Kayıtlı antrenman programı bulunmuyor.', style: TextStyle(fontSize: 12, color: CupertinoColors.placeholderText)),
-                                  ),
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Kayıtlı antrenman programı bulunmuyor.', style: TextStyle(fontSize: 12, color: CupertinoColors.placeholderText)),
+                                    CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      minSize: 0,
+                                      onPressed: () => ref.read(fitnessProvider.notifier).loadDefaultTemplates(),
+                                      child: const Text('Varsayılanları Yükle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CupertinoColors.activeBlue)),
+                                    ),
+                                  ],
                                 )
                               : ListView.builder(
                                   scrollDirection: Axis.horizontal,

@@ -254,50 +254,7 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
 
     // Varsayılan antrenman programlarını yükle
     if (_templateBox.isEmpty) {
-      final pushId = 'default_push';
-      final pushTemplate = WorkoutTemplate(
-        id: pushId,
-        name: 'Göğüs ve Omuz (Push Day)',
-        exerciseNames: [
-          'Bench press',
-          'Incline dumbbell press',
-          'Fly machine',
-          'Shoulder press',
-          'Lateral raise',
-          'Triceps pushdown',
-        ],
-        setCounts: [2, 2, 2, 2, 2, 2],
-      );
-      _templateBox.put(pushId, jsonEncode(pushTemplate.toJson()));
-
-      final pullId = 'default_pull';
-      final pullTemplate = WorkoutTemplate(
-        id: pullId,
-        name: 'Sırt ve Biceps (Pull Day)',
-        exerciseNames: [
-          'Lat pulldown',
-          'Barbell row',
-          'Rope pullover',
-          'Spider curl',
-          'Hammer curl',
-        ],
-        setCounts: [2, 2, 3, 2, 2],
-      );
-      _templateBox.put(pullId, jsonEncode(pullTemplate.toJson()));
-
-      final legId = 'default_leg';
-      final legTemplate = WorkoutTemplate(
-        id: legId,
-        name: 'Bacak (Leg Day)',
-        exerciseNames: [
-          'Squat / Leg press',
-          'Leg extension',
-          'Leg curl (arka bacak için)',
-          'Calf raise',
-        ],
-        setCounts: [2, 2, 2, 3],
-      );
-      _templateBox.put(legId, jsonEncode(legTemplate.toJson()));
+      loadDefaultTemplates();
     }
 
     loadInitialData();
@@ -490,6 +447,54 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
   // ==========================================
   // ŞABLON İŞLEMLERİ
   // ==========================================
+  Future<void> loadDefaultTemplates() async {
+    final pushId = 'default_push';
+    final pushTemplate = WorkoutTemplate(
+      id: pushId,
+      name: 'Göğüs ve Omuz (Push Day)',
+      exerciseNames: [
+        'Bench press',
+        'Incline dumbbell press',
+        'Fly machine',
+        'Shoulder press',
+        'Lateral raise',
+        'Triceps pushdown',
+      ],
+      setCounts: [2, 2, 2, 2, 2, 2],
+    );
+    await _templateBox.put(pushId, jsonEncode(pushTemplate.toJson()));
+
+    final pullId = 'default_pull';
+    final pullTemplate = WorkoutTemplate(
+      id: pullId,
+      name: 'Sırt ve Biceps (Pull Day)',
+      exerciseNames: [
+        'Lat pulldown',
+        'Barbell row',
+        'Rope pullover',
+        'Spider curl',
+        'Hammer curl',
+      ],
+      setCounts: [2, 2, 3, 2, 2],
+    );
+    await _templateBox.put(pullId, jsonEncode(pullTemplate.toJson()));
+
+    final legId = 'default_leg';
+    final legTemplate = WorkoutTemplate(
+      id: legId,
+      name: 'Bacak (Leg Day)',
+      exerciseNames: [
+        'Squat / Leg press',
+        'Leg extension',
+        'Leg curl (arka bacak için)',
+        'Calf raise',
+      ],
+      setCounts: [2, 2, 2, 3],
+    );
+    await _templateBox.put(legId, jsonEncode(legTemplate.toJson()));
+    loadDataForDate(state.selectedDate);
+  }
+
   Future<void> addTemplate(String name, List<String> exercises, List<int> sets) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final template = WorkoutTemplate(
