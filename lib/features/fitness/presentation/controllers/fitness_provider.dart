@@ -251,6 +251,55 @@ class FitnessNotifier extends StateNotifier<FitnessState> {
     _offdayBox = Hive.box<String>('fitness_offdays');
     _cardioBox = Hive.box<String>('fitness_cardio');
     _settingsBox = Hive.box('fitness_settings');
+
+    // Varsayılan antrenman programlarını yükle
+    if (_templateBox.isEmpty) {
+      final pushId = 'default_push';
+      final pushTemplate = WorkoutTemplate(
+        id: pushId,
+        name: 'Göğüs ve Omuz (Push Day)',
+        exerciseNames: [
+          'Bench press',
+          'Incline dumbbell press',
+          'Fly machine',
+          'Shoulder press',
+          'Lateral raise',
+          'Triceps pushdown',
+        ],
+        setCounts: [2, 2, 2, 2, 2, 2],
+      );
+      _templateBox.put(pushId, jsonEncode(pushTemplate.toJson()));
+
+      final pullId = 'default_pull';
+      final pullTemplate = WorkoutTemplate(
+        id: pullId,
+        name: 'Sırt ve Biceps (Pull Day)',
+        exerciseNames: [
+          'Lat pulldown',
+          'Barbell row',
+          'Rope pullover',
+          'Spider curl',
+          'Hammer curl',
+        ],
+        setCounts: [2, 2, 3, 2, 2],
+      );
+      _templateBox.put(pullId, jsonEncode(pullTemplate.toJson()));
+
+      final legId = 'default_leg';
+      final legTemplate = WorkoutTemplate(
+        id: legId,
+        name: 'Bacak (Leg Day)',
+        exerciseNames: [
+          'Squat / Leg press',
+          'Leg extension',
+          'Leg curl (arka bacak için)',
+          'Calf raise',
+        ],
+        setCounts: [2, 2, 2, 3],
+      );
+      _templateBox.put(legId, jsonEncode(legTemplate.toJson()));
+    }
+
     loadInitialData();
   }
 

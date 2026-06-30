@@ -645,14 +645,14 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
     );
   }
 
-  void _showEditSetModal(WorkoutLog log) {
+  void _showEditSetModal(WorkoutLog log, int setNum) {
     final weightController = TextEditingController(text: log.weight > 0 ? log.weight.toString() : '');
     final repsController = TextEditingController(text: log.reps > 0 ? log.reps.toString() : '');
 
     showCupertinoModalPopup<void>(
       context: context,
       builder: (BuildContext context) => CupertinoActionSheet(
-        title: Text('${log.exerciseName} - Set ${log.sets} Düzenle'),
+        title: Text('${log.exerciseName} - Set $setNum Düzenle'),
         message: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: Row(
@@ -2020,7 +2020,15 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                                                 CupertinoButton(
                                                   padding: EdgeInsets.zero,
                                                   minSize: 0,
-                                                  onPressed: () => _showAddWorkoutModal(prefilledName: exerciseName),
+                                                  onPressed: () {
+                                                    final currentSetsCount = setsList.length;
+                                                    ref.read(fitnessProvider.notifier).addWorkout(
+                                                      exerciseName,
+                                                      currentSetsCount + 1,
+                                                      0,
+                                                      0.0,
+                                                    );
+                                                  },
                                                   child: const Row(
                                                     children: [
                                                       Icon(CupertinoIcons.add, size: 14),
@@ -2040,17 +2048,18 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
                                             child: Column(
                                               children: setsList.map((log) {
                                                 final isLogged = log.reps > 0 || log.weight > 0;
+                                                final setIndex = setsList.indexOf(log) + 1;
                                                 return Padding(
                                                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
                                                       Text(
-                                                        'Set ${log.sets}:',
+                                                        'Set $setIndex:',
                                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                                       ),
                                                       GestureDetector(
-                                                        onTap: () => _showEditSetModal(log),
+                                                        onTap: () => _showEditSetModal(log, setIndex),
                                                         child: Container(
                                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                                           decoration: BoxDecoration(
