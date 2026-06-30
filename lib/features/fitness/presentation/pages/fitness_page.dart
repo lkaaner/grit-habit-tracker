@@ -728,10 +728,72 @@ class _FitnessPageState extends ConsumerState<FitnessPage> {
             return CupertinoActionSheet(
               title: Text(existingTemplate != null ? 'Antrenman Şablonunu Düzenle' : 'Yeni Antrenman Şablonu'),
               message: Container(
-                constraints: const BoxConstraints(maxHeight: 280),
+                constraints: const BoxConstraints(maxHeight: 350),
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      if (existingTemplate == null) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Hazır Şablon Seç (Doldur):',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF9EA0A5)),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildPresetChip(
+                              label: '💪 Push Day',
+                              onTap: () {
+                                setModalState(() {
+                                  nameController.text = 'Göğüs ve Omuz (Push Day)';
+                                  tempExercises = [
+                                    {'name': TextEditingController(text: 'Bench press'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Incline dumbbell press'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Fly machine'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Shoulder press'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Lateral raise'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Triceps pushdown'), 'sets': TextEditingController(text: '2')},
+                                  ];
+                                });
+                              },
+                            ),
+                            _buildPresetChip(
+                              label: '🔥 Pull Day',
+                              onTap: () {
+                                setModalState(() {
+                                  nameController.text = 'Sırt ve Biceps (Pull Day)';
+                                  tempExercises = [
+                                    {'name': TextEditingController(text: 'Lat pulldown'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Barbell row'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Rope pullover'), 'sets': TextEditingController(text: '3')},
+                                    {'name': TextEditingController(text: 'Spider curl'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Hammer curl'), 'sets': TextEditingController(text: '2')},
+                                  ];
+                                });
+                              },
+                            ),
+                            _buildPresetChip(
+                              label: '🦵 Leg Day',
+                              onTap: () {
+                                setModalState(() {
+                                  nameController.text = 'Bacak (Leg Day)';
+                                  tempExercises = [
+                                    {'name': TextEditingController(text: 'Squat / Leg press'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Leg extension'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Leg curl (arka bacak için)'), 'sets': TextEditingController(text: '2')},
+                                    {'name': TextEditingController(text: 'Calf raise'), 'sets': TextEditingController(text: '3')},
+                                  ];
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       CupertinoTextField(
                         controller: nameController,
                         placeholder: 'Şablon İsmi (örn: Bacak Günü)...',
